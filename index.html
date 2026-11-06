@@ -116,7 +116,120 @@ footer{margin-top:80px;background:var(--bg-card);border-top:1px solid var(--bord
 .footer-bottom{border-top:1px solid var(--border-color);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;color:var(--text-muted);font-size:.88rem}
 #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text-main);color:var(--bg-main);padding:12px 24px;border-radius:999px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.2);opacity:0;transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .3s;z-index:100}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-#pdfHost{position:fixed;left:-10000px;top:0}
+
+/* ---------- Invoice card + off-screen stage ---------- */
+#pdfStage{position:fixed;top:0;left:0;width:0;height:0;overflow:hidden;pointer-events:none;z-index:-1}
+#invoice-card{
+  width:794px;height:1120px;           /* A4 @96dpi, 3px under 1123 to avoid a 2nd page */
+  margin:0;padding:0;background:#fff;color:#0f172a;
+  box-sizing:border-box;overflow:hidden;position:relative;
+}
+#invoice-card .inv-head{padding:36px 48px;display:flex;justify-content:space-between;align-items:center;color:#fff}
+#invoice-card .inv-body{padding:36px 48px 48px}
+
+/* ---------- Layout hardening ---------- */
+html,body{max-width:100%}
+body{overflow-x:clip}                  /* clip (not hidden) so the sticky header keeps working */
+header{padding-top:env(safe-area-inset-top,0px)}
+.workspace{grid-template-columns:minmax(0,1fr) 380px}
+.workspace > div{min-width:0}
+.main-nav{display:flex;gap:6px}
+.form-group,.form-row > *{min-width:0}
+
+@media(max-width:1024px){
+  .workspace{grid-template-columns:minmax(0,1fr)}
+}
+
+.mobile-bar{display:none}
+
+@media(max-width:640px){
+  html{-webkit-text-size-adjust:100%}
+  body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .container{padding:0 14px}
+
+  /* Header: logo + theme button on row 1, segmented tabs on row 2 */
+  header{position:static}
+  .nav{height:auto;padding:12px 0;flex-wrap:wrap;gap:12px}
+  .nav-actions{display:contents}
+  .brand{order:1;font-size:1.15rem;gap:8px}
+  .brand-icon{width:32px;height:32px;border-radius:9px;font-size:.85rem}
+  #themeBtn{order:2;margin-left:auto;width:38px;height:38px;box-shadow:none}
+  .main-nav{order:3;width:100%;gap:4px;padding:4px;background:var(--bg-main);border:1px solid var(--border-color);border-radius:12px;overflow:visible}
+  .nav-link{flex:1;text-align:center;padding:9px 4px;font-size:.84rem;white-space:nowrap}
+  .nav-link.active{background:var(--bg-card);color:var(--accent);box-shadow:0 1px 4px rgba(15,23,42,.12)}
+
+  /* Hero */
+  .hero{padding:22px 0 6px}
+  .hero h1{font-size:1.85rem;margin-bottom:10px}
+  .hero p{font-size:.95rem;margin-bottom:16px}
+  .feature-badges{gap:8px}
+  .badge{font-size:.78rem;padding:5px 12px}
+
+  /* Layout + cards */
+  .workspace{gap:16px;margin-top:18px}
+  .workspace > div{gap:16px!important}
+  .card{padding:18px 14px;border-radius:16px}
+  .card-title{font-size:1.05rem;flex-wrap:wrap;gap:10px;margin-bottom:18px;padding-bottom:12px}
+
+  /* Forms */
+  .form-row{grid-template-columns:minmax(0,1fr);gap:0}
+  .form-group{margin-bottom:14px}
+  label{font-size:.75rem}
+  input,select,textarea{font-size:16px;padding:12px 14px;min-height:46px}   /* 16px stops iOS zoom-on-focus */
+  textarea{min-height:0}
+  input[type="date"]{-webkit-appearance:none;appearance:none;display:block;text-align:left}
+  input[type="date"]::-webkit-date-and-time-value{text-align:left}
+  .logo-upload-box{padding:12px;gap:12px}
+  .color-picker-grid{gap:14px}
+  .color-dot{width:36px;height:36px}
+
+  /* Line items become stacked cards: description / qty+price / tax+total */
+  .table-wrapper{overflow:visible;margin-top:0}
+  table.items-table,.items-table tbody{display:block;min-width:0;width:100%}
+  .items-table thead{display:none}
+  .items-table tr{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
+    padding:14px;margin-bottom:12px;border:1px solid var(--border-color);
+    border-radius:var(--radius-md);background:var(--bg-main)}
+  .items-table td{display:block;padding:0;border:0;width:auto!important}
+  .items-table td:first-child{grid-column:1/-1}
+  .items-table td[data-label]::before{content:attr(data-label);display:block;font-size:.7rem;
+    font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px}
+  .items-table td.col-total{text-align:left;font-weight:800;font-size:1.05rem;align-self:end;padding-bottom:12px;overflow-wrap:anywhere}
+  .items-table td.col-action{position:absolute;top:6px;right:6px}
+  .items-table .btn-danger-icon{padding:4px}
+  .items-table input{background:var(--bg-card)}
+
+  .totals-box{max-width:100%;margin-top:16px;padding:16px}
+  .summary-row.grand{font-size:1.15rem}
+
+  /* Buttons */
+  .btn{padding:14px 16px}
+  .desktop-dl{display:none!important}   /* replaced by the sticky bar below */
+
+  /* Sticky bottom action bar */
+  .mobile-bar{display:flex;align-items:center;gap:12px;position:fixed;left:0;right:0;bottom:0;z-index:50;
+    padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
+    background:var(--bg-card);border-top:1px solid var(--border-color);box-shadow:0 -6px 20px rgba(15,23,42,.08)}
+  .mobile-bar .bar-total{flex:1;min-width:0;line-height:1.25}
+  .mobile-bar .bar-total small{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
+  .mobile-bar .bar-total strong{display:block;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mobile-bar .btn{flex:0 0 auto;padding:12px 18px}
+
+  /* Footer */
+  footer{margin-top:40px;padding:36px 0 24px}
+  .footer-col a{overflow-wrap:anywhere}
+  .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px}
+
+  /* Toast sits above the sticky bar */
+  #toast{bottom:calc(88px + env(safe-area-inset-bottom,0px));width:calc(100% - 28px);text-align:center;border-radius:14px;white-space:normal}
+}
+
+@media(max-width:400px){
+  .brand span{display:none}
+  .hero h1{font-size:1.65rem}
+  .card{padding:16px 12px}
+  .mobile-bar .btn{padding:12px 14px}
+}
 </style>
 </head>
 <body>
@@ -128,7 +241,7 @@ footer{margin-top:80px;background:var(--bg-card);border-top:1px solid var(--bord
       QuickInvoice <span style="font-weight:400;color:var(--text-muted);font-size:.9rem;">Pro Studio</span>
     </a>
     <div class="nav-actions">
-      <nav style="display:flex;gap:6px;">
+      <nav class="main-nav">
         <a class="nav-link active" href="#" data-mode="invoice" onclick="switchMode('invoice',event)">Invoice</a>
         <a class="nav-link" href="#" data-mode="vat" onclick="switchMode('vat',event)">UK VAT</a>
         <a class="nav-link" href="#" data-mode="quote" onclick="switchMode('quote',event)">Quotation</a>
@@ -264,7 +377,7 @@ footer{margin-top:80px;background:var(--bg-card);border-top:1px solid var(--bord
         </div>
 
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:12px;">
-          <button class="btn btn-primary" type="button" onclick="downloadPdf()" style="width:100%;">
+          <button class="btn btn-primary desktop-dl" type="button" onclick="downloadInvoicePDF()" style="width:100%;">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Download PDF Document
           </button>
@@ -308,8 +421,18 @@ footer{margin-top:80px;background:var(--bg-card);border-top:1px solid var(--bord
   </div>
 </footer>
 
+<div class="mobile-bar">
+  <div class="bar-total"><small>Total</small><strong id="barTotal">0.00</strong></div>
+  <button class="btn btn-primary" type="button" onclick="downloadInvoicePDF()">Download PDF</button>
+</div>
+
 <div id="toast"></div>
-<div id="pdfHost" aria-hidden="true"></div>
+
+<!-- Off-screen render stage. html2pdf clones #invoice-card into its own overlay,
+     so this wrapper never affects the exported PDF. -->
+<div id="pdfStage" aria-hidden="true">
+  <div id="invoice-card"></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 
@@ -404,11 +527,11 @@ $("logoInput").onchange = e => {
 function addRow(data = {}) {
   const tr = document.createElement("tr");
   tr.innerHTML = `
-    <td><input class="d" placeholder="Description of service..." value="${esc(data.d || "")}"></td>
-    <td class="col-qty"><input class="q" type="number" min="0" step="any" value="${data.q ?? 1}"></td>
-    <td class="col-price"><input class="p" type="number" min="0" step="any" placeholder="0.00" value="${data.p ?? ""}"></td>
-    <td class="col-tax"><input class="t" type="number" min="0" step="any" value="${data.t ?? (currentMode === 'vat' ? 20 : 0)}"></td>
-    <td class="col-total">0.00</td>
+    <td data-label="Description"><input class="d" placeholder="Description of service..." value="${esc(data.d || "")}"></td>
+    <td class="col-qty" data-label="Qty"><input class="q" type="number" min="0" step="any" value="${data.q ?? 1}"></td>
+    <td class="col-price" data-label="Price"><input class="p" type="number" min="0" step="any" placeholder="0.00" value="${data.p ?? ""}"></td>
+    <td class="col-tax" data-label="Tax %"><input class="t" type="number" min="0" step="any" value="${data.t ?? (currentMode === 'vat' ? 20 : 0)}"></td>
+    <td class="col-total" data-label="Total">0.00</td>
     <td class="col-action">
       <button class="btn-danger-icon" type="button" title="Remove Item" onclick="this.closest('tr').remove(); calculate();">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
@@ -442,6 +565,7 @@ function calculate() {
   $("tSub").textContent = formatMoney(sub);
   $("tTax").textContent = formatMoney(tax);
   $("tGrand").textContent = formatMoney(sub + tax);
+  if ($("barTotal")) $("barTotal").textContent = formatMoney(sub + tax);
   return { sub, tax, total: sub + tax };
 }
 $("cur").addEventListener("change", calculate);
@@ -491,16 +615,16 @@ function validate() {
   return valid;
 }
 
-/* PDF generation */
-async function downloadPdf() {
+/* PDF generation: targets ONLY #invoice-card */
+async function downloadInvoicePDF() {
   if (!validate()) return;
   if (!window.html2pdf) { showToast("PDF engine loading, please wait..."); return; }
 
-  const items = readRows();
+  const items  = readRows();
   const totals = calculate();
   const modeTitles = { invoice: "INVOICE", vat: "VAT INVOICE", quote: "QUOTATION" };
   const cell = "padding:10px;border-bottom:1px solid #e2e8f0;color:#0f172a;";
-  const th = "padding:12px 14px;text-align:right;font-size:11px;text-transform:uppercase;";
+  const th   = "padding:12px 14px;text-align:right;font-size:11px;text-transform:uppercase;";
 
   const rowsHtml = items.map(i => `
     <tr>
@@ -511,27 +635,30 @@ async function downloadPdf() {
       <td style="${cell}text-align:right;font-weight:700;">${formatMoney(i.net + i.tax)}</td>
     </tr>`).join("");
 
-  const pdfTemplate = `
-    <div style="width:794px;min-height:1123px;padding:48px;background:#ffffff;color:#0f172a;font-family:${activeFont};box-sizing:border-box;position:relative;">
-      <div style="background:${accentColor};color:#ffffff;padding:36px 48px;margin:-48px -48px 36px -48px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          ${logoData ? `<img src="${logoData}" style="max-height:48px;max-width:140px;margin-bottom:12px;display:block;background:#fff;padding:4px;border-radius:6px;">` : ''}
-          <h1 style="font-size:32px;font-weight:800;letter-spacing:1px;margin:0;text-transform:uppercase;">${modeTitles[currentMode]}</h1>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:16px;font-weight:700;">NO: ${esc($("invNo").value)}</div>
-          <div style="font-size:12px;opacity:.9;margin-top:4px;">Date: ${esc($("issue").value)}</div>
-          ${$("due").value ? `<div style="font-size:12px;opacity:.9;">${currentMode === 'quote' ? 'Valid until' : 'Due'}: ${esc($("due").value)}</div>` : ''}
-        </div>
+  // Fill ONLY the invoice card (no outer wrapper, no negative margins)
+  const card = $("invoice-card");
+  card.style.fontFamily = activeFont;
+  card.innerHTML = `
+    <div class="inv-head" style="background:${accentColor};">
+      <div>
+        ${logoData ? `<img src="${logoData}" style="max-height:48px;max-width:140px;margin-bottom:12px;display:block;background:#fff;padding:4px;border-radius:6px;">` : ''}
+        <h1 style="font-size:32px;font-weight:800;letter-spacing:1px;margin:0;text-transform:uppercase;color:#fff;">${modeTitles[currentMode]}</h1>
       </div>
+      <div style="text-align:right;">
+        <div style="font-size:16px;font-weight:700;">NO: ${esc($("invNo").value)}</div>
+        <div style="font-size:12px;opacity:.9;margin-top:4px;">Date: ${esc($("issue").value)}</div>
+        ${$("due").value ? `<div style="font-size:12px;opacity:.9;">${currentMode === 'quote' ? 'Valid until' : 'Due'}: ${esc($("due").value)}</div>` : ''}
+      </div>
+    </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:30px;">
-        <div>
+    <div class="inv-body">
+      <div style="display:flex;gap:40px;margin-bottom:30px;">
+        <div style="flex:1;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Bill To:</div>
           <strong style="font-size:15px;display:block;margin-bottom:4px;">${esc($("cName").value)}</strong>
           <div style="color:#334155;white-space:pre-line;font-size:13px;">${esc($("cAddr").value)}</div>
         </div>
-        <div>
+        <div style="flex:1;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">From:</div>
           <strong style="font-size:15px;display:block;margin-bottom:4px;">${esc($("sName").value)}</strong>
           <div style="color:#334155;white-space:pre-line;font-size:13px;">${esc($("sAddr").value)}</div>
@@ -559,36 +686,55 @@ async function downloadPdf() {
         <div style="background:${accentColor};color:#fff;padding:14px 20px;border-radius:6px;display:flex;justify-content:space-between;font-weight:700;font-size:16px;margin-top:6px;"><span>Total</span><span>${formatMoney(totals.total)}</span></div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:40px;">
-        <div>
+      <div style="display:flex;gap:30px;margin-top:40px;">
+        <div style="flex:1;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Note:</div>
           <div style="color:#334155;white-space:pre-line;font-size:13px;border-bottom:1px solid #cbd5e1;padding-bottom:8px;">${esc($("notes").value || "Payment due within 14 days.")}</div>
         </div>
-        <div style="text-align:right;">
+        <div style="flex:1;text-align:right;">
           <h3 style="font-size:22px;font-family:'Outfit',sans-serif;font-weight:800;color:${accentColor};margin:0;">Thank You!</h3>
         </div>
       </div>
     </div>`;
 
-  const host = $("pdfHost");
-  host.innerHTML = pdfTemplate;
-  await new Promise(r => setTimeout(r, 150));
+  // Make sure web fonts are loaded before rasterizing (matters on mobile)
+  try { await document.fonts.ready; } catch (e) {}
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  // If many line items overflow one A4 page, let the card grow instead of clipping
+  const overflowed = card.scrollHeight > 1120;
+  card.style.height = overflowed ? "auto" : "1120px";
+  card.style.minHeight = overflowed ? "1120px" : "";
 
   const opt = {
     margin: 0,
-    filename: `${($("invNo").value || 'document').replace(/[^\w-]+/g, '_')}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    filename: `${($("invNo").value || "document").replace(/[^\w-]+/g, "_")}.pdf`,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 794,                 // render at A4 width regardless of phone viewport
+      width: 794,
+      logging: false
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["css"], avoid: "tr" }
   };
 
   try {
-    await html2pdf().set(opt).from(host.firstElementChild).save();
+    await html2pdf().set(opt).from(card).save();
     showToast("PDF generated and downloaded successfully!");
   } catch (e) {
+    console.error(e);
     showToast("Failed to generate PDF.");
+  } finally {
+    card.innerHTML = "";
+    card.style.height = "";
+    card.style.minHeight = "";
   }
-  host.innerHTML = "";
 }
 
 /* Init */
