@@ -20,22 +20,15 @@
   "name": "QuickInvoice Pro",
   "operatingSystem": "All",
   "applicationCategory": "BusinessApplication",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
+  "offers": {"@type": "Offer","price": "0","priceCurrency": "USD"},
   "description": "Free professional invoice generator to craft exquisite, print-ready PDF invoices and business documents in seconds."
 }
 </script>
-<!-- Open Graph / Social Share Meta Tags -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://quickinvoice-nu.vercel.app/">
 <meta property="og:title" content="QuickInvoice Pro - Free Professional Invoice & Estimate Generator">
 <meta property="og:description" content="Craft exquisite, print-ready PDF invoices and business documents in seconds with zero friction. 100% free & secure client-side tool.">
 <meta property="og:image" content="https://quickinvoice-nu.vercel.app/preview-image.png">
-
-<!-- Twitter Card Tags -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:url" content="https://quickinvoice-nu.vercel.app/">
 <meta name="twitter:title" content="QuickInvoice Pro - Free Professional Invoice & Estimate Generator">
@@ -69,7 +62,6 @@ header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);-webkit-backd
 .badge{display:inline-flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border-color);padding:6px 16px;border-radius:999px;font-size:.88rem;font-weight:600;box-shadow:var(--shadow-subtle)}
 .badge svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2.5}
 .workspace{display:grid;grid-template-columns:1fr 380px;gap:28px;margin-top:32px}
-@media(max-width:1024px){.workspace{grid-template-columns:1fr}}
 .card{background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-card);animation:fadeIn .5s cubic-bezier(.16,1,.3,1) forwards}
 @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .card-title{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:700;margin:0 0 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-color);padding-bottom:14px}
@@ -98,8 +90,9 @@ table.items-table{width:100%;border-collapse:collapse;min-width:650px}
 .totals-box{margin-top:24px;margin-left:auto;max-width:340px;background:var(--bg-main);border:1px solid var(--border-color);border-radius:var(--radius-md);padding:20px}
 .summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.95rem;color:var(--text-muted)}
 .summary-row.grand{border-top:2px solid var(--border-color);margin-top:10px;padding-top:12px;font-size:1.25rem;font-weight:800;color:var(--text-main)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 24px;font-size:.95rem;font-weight:700;border-radius:var(--radius-sm);border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-main);cursor:pointer;transition:all .25s;box-shadow:var(--shadow-subtle)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 24px;font-size:.95rem;font-weight:700;border-radius:var(--radius-sm);border:1px solid var(--border-color);background:var(--bg-card);color:var(--text-main);cursor:pointer;transition:all .25s;box-shadow:var(--shadow-subtle);font-family:inherit}
 .btn:hover{transform:translateY(-2px);border-color:var(--accent)}
+.btn:disabled{opacity:.6;cursor:wait;transform:none}
 .btn-primary{background:var(--accent);color:var(--accent-text);border-color:var(--accent)}
 .btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);box-shadow:0 8px 20px -4px rgba(37,99,235,.4)}
 .btn-danger-icon{background:transparent;border:none;color:var(--danger);cursor:pointer;padding:8px;border-radius:8px;transition:background .2s}
@@ -114,40 +107,38 @@ footer{margin-top:80px;background:var(--bg-card);border-top:1px solid var(--bord
 .footer-links a{color:var(--text-muted);text-decoration:none;font-size:.92rem;transition:color .2s}
 .footer-links a:hover{color:var(--accent)}
 .footer-bottom{border-top:1px solid var(--border-color);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;color:var(--text-muted);font-size:.88rem}
-#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text-main);color:var(--bg-main);padding:12px 24px;border-radius:999px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.2);opacity:0;transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .3s;z-index:100}
+#toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--text-main);color:var(--bg-main);padding:12px 24px;border-radius:999px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.2);opacity:0;transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .3s;z-index:300;pointer-events:none}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-/* ---------- Invoice card + off-screen stage ---------- */
-#pdfStage{position:fixed;top:0;left:0;width:0;height:0;overflow:hidden;pointer-events:none;z-index:-1}
-#invoice-card{
-  width:794px;height:1120px;           /* A4 @96dpi, 3px under 1123 to avoid a 2nd page */
-  margin:0;padding:0;background:#fff;color:#0f172a;
-  box-sizing:border-box;overflow:hidden;position:relative;
-}
+/* ---------- Off-screen PDF stage (real size, parked off-screen to the left) ---------- */
+#pdfStage{position:absolute;top:0;left:-10000px;width:794px;pointer-events:none}
+#invoice-card{width:794px;min-height:1120px;margin:0;padding:0;background:#fff;color:#0f172a;box-sizing:border-box;position:relative}
 #invoice-card .inv-head{padding:36px 48px;display:flex;justify-content:space-between;align-items:center;color:#fff}
 #invoice-card .inv-body{padding:36px 48px 48px}
 
+/* ---------- "PDF ready" sheet (user-gesture download for mobile) ---------- */
+#dlSheet{position:fixed;inset:0;z-index:200;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55)}
+#dlSheet.show{display:flex}
+#dlSheet .sheet{background:var(--bg-card);color:var(--text-main);width:100%;max-width:420px;border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;text-align:center}
+#dlSheet .sheet small{color:var(--text-muted);font-size:.8rem;line-height:1.4}
+#dlSheet a.btn{text-decoration:none}
+@media(min-width:641px){#dlSheet{align-items:center}#dlSheet .sheet{border-radius:20px}}
+
 /* ---------- Layout hardening ---------- */
 html,body{max-width:100%}
-body{overflow-x:clip}                  /* clip (not hidden) so the sticky header keeps working */
+body{overflow-x:clip}
 header{padding-top:env(safe-area-inset-top,0px)}
 .workspace{grid-template-columns:minmax(0,1fr) 380px}
 .workspace > div{min-width:0}
 .main-nav{display:flex;gap:6px}
 .form-group,.form-row > *{min-width:0}
-
-@media(max-width:1024px){
-  .workspace{grid-template-columns:minmax(0,1fr)}
-}
-
+@media(max-width:1024px){.workspace{grid-template-columns:minmax(0,1fr)}}
 .mobile-bar{display:none}
 
 @media(max-width:640px){
   html{-webkit-text-size-adjust:100%}
   body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
   .container{padding:0 14px}
-
-  /* Header: logo + theme button on row 1, segmented tabs on row 2 */
   header{position:static}
   .nav{height:auto;padding:12px 0;flex-wrap:wrap;gap:12px}
   .nav-actions{display:contents}
@@ -157,73 +148,50 @@ header{padding-top:env(safe-area-inset-top,0px)}
   .main-nav{order:3;width:100%;gap:4px;padding:4px;background:var(--bg-main);border:1px solid var(--border-color);border-radius:12px;overflow:visible}
   .nav-link{flex:1;text-align:center;padding:9px 4px;font-size:.84rem;white-space:nowrap}
   .nav-link.active{background:var(--bg-card);color:var(--accent);box-shadow:0 1px 4px rgba(15,23,42,.12)}
-
-  /* Hero */
   .hero{padding:22px 0 6px}
   .hero h1{font-size:1.85rem;margin-bottom:10px}
   .hero p{font-size:.95rem;margin-bottom:16px}
   .feature-badges{gap:8px}
   .badge{font-size:.78rem;padding:5px 12px}
-
-  /* Layout + cards */
   .workspace{gap:16px;margin-top:18px}
   .workspace > div{gap:16px!important}
   .card{padding:18px 14px;border-radius:16px}
   .card-title{font-size:1.05rem;flex-wrap:wrap;gap:10px;margin-bottom:18px;padding-bottom:12px}
-
-  /* Forms */
   .form-row{grid-template-columns:minmax(0,1fr);gap:0}
   .form-group{margin-bottom:14px}
   label{font-size:.75rem}
-  input,select,textarea{font-size:16px;padding:12px 14px;min-height:46px}   /* 16px stops iOS zoom-on-focus */
+  input,select,textarea{font-size:16px;padding:12px 14px;min-height:46px}
   textarea{min-height:0}
   input[type="date"]{-webkit-appearance:none;appearance:none;display:block;text-align:left}
   input[type="date"]::-webkit-date-and-time-value{text-align:left}
   .logo-upload-box{padding:12px;gap:12px}
   .color-picker-grid{gap:14px}
   .color-dot{width:36px;height:36px}
-
-  /* Line items become stacked cards: description / qty+price / tax+total */
   .table-wrapper{overflow:visible;margin-top:0}
   table.items-table,.items-table tbody{display:block;min-width:0;width:100%}
   .items-table thead{display:none}
-  .items-table tr{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;
-    padding:14px;margin-bottom:12px;border:1px solid var(--border-color);
-    border-radius:var(--radius-md);background:var(--bg-main)}
+  .items-table tr{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;margin-bottom:12px;border:1px solid var(--border-color);border-radius:var(--radius-md);background:var(--bg-main)}
   .items-table td{display:block;padding:0;border:0;width:auto!important}
   .items-table td:first-child{grid-column:1/-1}
-  .items-table td[data-label]::before{content:attr(data-label);display:block;font-size:.7rem;
-    font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px}
+  .items-table td[data-label]::before{content:attr(data-label);display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:4px}
   .items-table td.col-total{text-align:left;font-weight:800;font-size:1.05rem;align-self:end;padding-bottom:12px;overflow-wrap:anywhere}
   .items-table td.col-action{position:absolute;top:6px;right:6px}
   .items-table .btn-danger-icon{padding:4px}
   .items-table input{background:var(--bg-card)}
-
   .totals-box{max-width:100%;margin-top:16px;padding:16px}
   .summary-row.grand{font-size:1.15rem}
-
-  /* Buttons */
   .btn{padding:14px 16px}
-  .desktop-dl{display:none!important}   /* replaced by the sticky bar below */
-
-  /* Sticky bottom action bar */
-  .mobile-bar{display:flex;align-items:center;gap:12px;position:fixed;left:0;right:0;bottom:0;z-index:50;
-    padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
-    background:var(--bg-card);border-top:1px solid var(--border-color);box-shadow:0 -6px 20px rgba(15,23,42,.08)}
+  .desktop-dl{display:none!important}
+  .mobile-bar{display:flex;align-items:center;gap:12px;position:fixed;left:0;right:0;bottom:0;z-index:50;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg-card);border-top:1px solid var(--border-color);box-shadow:0 -6px 20px rgba(15,23,42,.08)}
   .mobile-bar .bar-total{flex:1;min-width:0;line-height:1.25}
   .mobile-bar .bar-total small{display:block;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted)}
   .mobile-bar .bar-total strong{display:block;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mobile-bar .btn{flex:0 0 auto;padding:12px 18px}
-
-  /* Footer */
   footer{margin-top:40px;padding:36px 0 24px}
   .footer-col a{overflow-wrap:anywhere}
   .footer-bottom{flex-direction:column;align-items:flex-start;gap:8px}
-
-  /* Toast sits above the sticky bar */
   #toast{bottom:calc(88px + env(safe-area-inset-bottom,0px));width:calc(100% - 28px);text-align:center;border-radius:14px;white-space:normal}
 }
-
 @media(max-width:400px){
   .brand span{display:none}
   .hero h1{font-size:1.65rem}
@@ -246,7 +214,7 @@ header{padding-top:env(safe-area-inset-top,0px)}
         <a class="nav-link" href="#" data-mode="vat" onclick="switchMode('vat',event)">UK VAT</a>
         <a class="nav-link" href="#" data-mode="quote" onclick="switchMode('quote',event)">Quotation</a>
       </nav>
-      <button class="icon-btn" id="themeBtn" title="Toggle Dark/Light Mode">
+      <button class="icon-btn" id="themeBtn" type="button" title="Toggle Dark/Light Mode">
         <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-5.4-5.4c0-1.81.89-3.42 2.26-4.4C12.92 3.04 12.46 3 12 3z"/></svg>
       </button>
     </div>
@@ -351,7 +319,7 @@ header{padding-top:env(safe-area-inset-top,0px)}
               <strong style="display:block;">Upload Brand Logo</strong>
               <span style="color:var(--text-muted);font-size:.8rem;">PNG, JPG up to 2MB</span>
             </div>
-            <input type="file" id="logoInput" accept="image/*" style="display:none">
+            <input type="file" id="logoInput" accept="image/*" style="display:none" onclick="event.stopPropagation()">
           </div>
         </div>
 
@@ -377,7 +345,7 @@ header{padding-top:env(safe-area-inset-top,0px)}
         </div>
 
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:12px;">
-          <button class="btn btn-primary desktop-dl" type="button" onclick="downloadInvoicePDF()" style="width:100%;">
+          <button class="btn btn-primary desktop-dl" type="button" onclick="downloadInvoicePDF(this)" style="width:100%;">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Download PDF Document
           </button>
@@ -410,7 +378,6 @@ header{padding-top:env(safe-area-inset-top,0px)}
         <ul class="footer-links">
           <li><a href="privacy.html">Client-Side Privacy</a></li>
           <li><a href="term.html">Terms of Service</a></li>
-
         </ul>
       </div>
     </div>
@@ -423,18 +390,30 @@ header{padding-top:env(safe-area-inset-top,0px)}
 
 <div class="mobile-bar">
   <div class="bar-total"><small>Total</small><strong id="barTotal">0.00</strong></div>
-  <button class="btn btn-primary" type="button" onclick="downloadInvoicePDF()">Download PDF</button>
+  <button class="btn btn-primary" type="button" onclick="downloadInvoicePDF(this)">Download PDF</button>
+</div>
+
+<!-- "PDF ready" sheet: the Save/Share taps are fresh user gestures, which mobile browsers always allow -->
+<div id="dlSheet" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet">
+    <strong style="font-size:1.1rem;">Your PDF is ready</strong>
+    <a id="dlLink" class="btn btn-primary" href="#" download="document.pdf">Save PDF</a>
+    <button id="shareBtn" class="btn" type="button" style="display:none;">Share / Open in…</button>
+    <a id="openLink" class="btn" href="#" target="_blank" rel="noopener">View PDF</a>
+    <small id="dlHint"></small>
+    <button class="btn" type="button" onclick="closeSheet()">Close</button>
+  </div>
 </div>
 
 <div id="toast"></div>
 
-<!-- Off-screen render stage. html2pdf clones #invoice-card into its own overlay,
-     so this wrapper never affects the exported PDF. -->
+<!-- Off-screen render stage (parked at left:-10000px, full A4 width) -->
 <div id="pdfStage" aria-hidden="true">
   <div id="invoice-card"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -448,6 +427,9 @@ let currentMode = 'invoice';
 let accentColor = '#2563eb';
 let activeFont = "'Plus Jakarta Sans', sans-serif";
 let logoData = "";
+
+const isMobile = () => matchMedia("(max-width:640px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const inAppBrowser = /FBAN|FBAV|Instagram|Line\/|WhatsApp|Snapchat|TikTok|Messenger|; wv\)/i.test(navigator.userAgent);
 
 function showToast(msg) {
   const t = $("toast");
@@ -477,7 +459,7 @@ function setFontStyle(font) {
   document.documentElement.style.setProperty('--font-family', font);
 }
 
-/* Mode switcher (also syncs default tax on existing rows) */
+/* Mode switcher */
 function switchMode(mode, e) {
   if (e) e.preventDefault();
   currentMode = mode;
@@ -500,7 +482,6 @@ function switchMode(mode, e) {
     $("invNo").value = "QUO-2026-01";
   }
 
-  // Only touch rows still on a default rate (0 or 20); custom rates are kept
   const defaultTax = mode === 'vat' ? 20 : 0;
   document.querySelectorAll('#itemRows .t').forEach(input => {
     const v = parseFloat(input.value) || 0;
@@ -615,10 +596,47 @@ function validate() {
   return valid;
 }
 
-/* PDF generation: targets ONLY #invoice-card */
-async function downloadInvoicePDF() {
+/* ---------- "PDF ready" sheet ---------- */
+let lastUrl = null;
+function closeSheet() {
+  $("dlSheet").classList.remove("show");
+  if (lastUrl) { const u = lastUrl; lastUrl = null; setTimeout(() => URL.revokeObjectURL(u), 60000); }
+}
+function showPdfResult(blob, name) {
+  if (lastUrl) URL.revokeObjectURL(lastUrl);
+  lastUrl = URL.createObjectURL(blob);
+
+  const a = $("dlLink"); a.href = lastUrl; a.download = name;
+  const o = $("openLink"); o.href = lastUrl;
+
+  // Web Share with a file opens the native "Save to Files / Drive / WhatsApp…" sheet
+  const sb = $("shareBtn");
+  sb.style.display = "none";
+  try {
+    const file = new File([blob], name, { type: "application/pdf" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      sb.style.display = "";
+      sb.onclick = () => navigator.share({ files: [file], title: name }).catch(() => {});
+    }
+  } catch (e) {}
+
+  $("dlHint").textContent = inAppBrowser
+    ? "Tip: this in-app browser may block downloads. Use Share, or open this page in Chrome/Safari."
+    : (/iPhone|iPad|iPod/i.test(navigator.userAgent) ? "If Save doesn't start, tap Share, then \"Save to Files\"." : "");
+  $("dlSheet").classList.add("show");
+}
+
+/* ---------- PDF generation ---------- */
+let pdfBusy = false;
+async function downloadInvoicePDF(btn) {
+  if (pdfBusy) return;
   if (!validate()) return;
-  if (!window.html2pdf) { showToast("PDF engine loading, please wait..."); return; }
+  if (!window.html2canvas || !window.jspdf) { showToast("PDF engine loading, please wait..."); return; }
+
+  pdfBusy = true;
+  const origText = btn ? btn.innerHTML : "";
+  if (btn) { btn.disabled = true; btn.textContent = "Preparing…"; }
+  window.scrollTo(0, 0);
 
   const items  = readRows();
   const totals = calculate();
@@ -635,7 +653,6 @@ async function downloadInvoicePDF() {
       <td style="${cell}text-align:right;font-weight:700;">${formatMoney(i.net + i.tax)}</td>
     </tr>`).join("");
 
-  // Fill ONLY the invoice card (no outer wrapper, no negative margins)
   const card = $("invoice-card");
   card.style.fontFamily = activeFont;
   card.innerHTML = `
@@ -697,43 +714,67 @@ async function downloadInvoicePDF() {
       </div>
     </div>`;
 
-  // Make sure web fonts are loaded before rasterizing (matters on mobile)
-  try { await document.fonts.ready; } catch (e) {}
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  try {
+    try { await document.fonts.ready; } catch (e) {}
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
-  // If many line items overflow one A4 page, let the card grow instead of clipping
-  const overflowed = card.scrollHeight > 1120;
-  card.style.height = overflowed ? "auto" : "1120px";
-  card.style.minHeight = overflowed ? "1120px" : "";
-
-  const opt = {
-    margin: 0,
-    filename: `${($("invNo").value || "document").replace(/[^\w-]+/g, "_")}.pdf`,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
+    const canvas = await html2canvas(card, {
+      scale: isMobile() ? 1.5 : 2,
       useCORS: true,
       backgroundColor: "#ffffff",
+      width: 794,
+      windowWidth: 794,
       scrollX: 0,
       scrollY: 0,
-      windowWidth: 794,                 // render at A4 width regardless of phone viewport
-      width: 794,
-      logging: false
-    },
-    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    pagebreak: { mode: ["css"], avoid: "tr" }
-  };
+      logging: false,
+      onclone: doc => {
+        const st = doc.getElementById("pdfStage");
+        if (st) { st.style.left = "0"; st.style.top = "0"; }
+      }
+    });
 
-  try {
-    await html2pdf().set(opt).from(card).save();
-    showToast("PDF generated and downloaded successfully!");
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageW = 210, pageH = 297;
+    const imgH = canvas.height * pageW / canvas.width;
+
+    if (imgH <= pageH + 1) {
+      pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pageW, Math.min(imgH, pageH));
+    } else {
+      // Long invoice: slice into A4-sized pages
+      const sliceH = Math.floor(canvas.width * pageH / pageW);
+      for (let y = 0, page = 0; y < canvas.height; y += sliceH, page++) {
+        const h = Math.min(sliceH, canvas.height - y);
+        const part = document.createElement("canvas");
+        part.width = canvas.width; part.height = h;
+        const ctx = part.getContext("2d");
+        ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, part.width, h);
+        ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+        if (page) pdf.addPage();
+        pdf.addImage(part.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pageW, h * pageW / canvas.width);
+      }
+    }
+
+    const name = ($("invNo").value || "document").replace(/[^\w-]+/g, "_") + ".pdf";
+    const blob = pdf.output("blob");
+
+    if (isMobile() || inAppBrowser) {
+      showPdfResult(blob, name);          // mobile: user taps Save/Share (always allowed)
+    } else {
+      const url = URL.createObjectURL(blob);   // desktop: straight download
+      const a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+    showToast("PDF ready ✓");
   } catch (e) {
     console.error(e);
-    showToast("Failed to generate PDF.");
+    showToast("Failed to generate PDF. Please try again.");
   } finally {
     card.innerHTML = "";
-    card.style.height = "";
-    card.style.minHeight = "";
+    pdfBusy = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = origText; }
   }
 }
 
